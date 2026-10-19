@@ -1,0 +1,27 @@
+# Host-based Ingress routed by the Traefik controller in namespace `traefik`.
+# To reach the app from your laptop, add this line to /etc/hosts:
+#   192.168.30.134 biasharaos.home
+# Then open http://biasharaos.home — Traefik selects this rule by Host header.
+#
+# Browser will show "Not secure" because this lab route is HTTP only.
+# TLS can be added later with cert-manager + a self-signed CA.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: biasharaos
+  namespace: biasharaos
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: biasharaos.home
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: biasharaos
+                port:
+                  number: 80

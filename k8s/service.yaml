@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: biasharaos
+  namespace: biasharaos
+  labels:
+    app: biasharaos
+spec:
+  type: ClusterIP
+  selector:
+    app: biasharaos
+  ports:
+    - name: http
+      port: 80         # service port (what Ingress targets)
+      targetPort: 3000 # container port
+      protocol: TCP

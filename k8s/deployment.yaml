@@ -1,0 +1,93 @@
+# Biashara OS workload.
+#
+# Why Recreate + replicas:1 + nodeSelector:
+#   The app persists business data to a local SQLite file on a hostPath PV.
+#   SQLite tolerates one writer at a time, so during a rollout the old Pod
+#   must terminate fully before the new one starts (hence Recreate), and both
+#   Pods must land on the same node (hence nodeSelector: deploy).
+#
+# Why imagePullPolicy: Never:
+#   The image is built on the worker with podman and imported into containerd
+#   via `ctr -n k8s.io images import` (see scripts/build-and-load-image.sh).
+#   No registry is involved, so kubelet must not try to pull.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biasharaos
+  namespace: biasharaos
+  labels:
+    app: biasharaos
+    app.kubernetes.io/name: biasharaos
+    app.kubernetes.io/version: "0.2.0"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: biasharaos
+  template:
+    metadata:
+      labels:
+        app: biasharaos
+        app.kubernetes.io/name: biasharaos
+        app.kubernetes.io/version: "0.2.0"
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: deploy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: biasharaos
+          image: localhost/biasharaos:0.2.0
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+          envFrom:
+            - secretRef:
+                name: biasharaos-s3
+            - secretRef:
+                name: biasharaos-invoice-token
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: sqlite
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   # Node needs /tmp; sqlite writes to /app/data
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: sqlite
+          persistentVolumeClaim:
+            claimName: biasharaos-sqlite-pvc
+      terminationGracePeriodSeconds: 30

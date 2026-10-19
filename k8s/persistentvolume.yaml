@@ -1,0 +1,32 @@
+# Local PV pinned to the worker node `deploy`. The directory
+# /var/lib/biasharaos/sqlite must exist on that node (DirectoryOrCreate will
+# make it on first mount). SQLite is single-writer, so we keep this bound 1:1
+# with the Pod via a Deployment that uses Recreate + nodeSelector.
+#
+# Reclaim policy = Retain: deleting the PVC does NOT delete the data. To wipe,
+# you must manually delete the directory on the node.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: biasharaos-sqlite-pv
+  labels:
+    app.kubernetes.io/name: biasharaos
+    app.kubernetes.io/component: sqlite-storage
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: biasharaos-local
+  hostPath:
+    path: /var/lib/biasharaos/sqlite
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - deploy
