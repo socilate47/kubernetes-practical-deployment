@@ -2,7 +2,7 @@
 
 Apply-ready Kubernetes manifests, container recipe, and operator scripts that
 reproduce the homelab deployment of **Biashara OS v0.2.0** (Africa-first
-manufacturing ERP MVP) described in [`docs/deployment-journey.pdf`](docs/deployment-journey.pdf).
+manufacturing ERP MVP) described in [`docs/Biashara_OS_Full_Journey_Cleaned.pdf`](docs/Biashara_OS_Full_Journey_Cleaned.pdf).
 
 > This repo is the "do this again on a fresh cluster" companion to that
 > journey. The PDF is the chronological log — what happened, what broke, how
@@ -250,7 +250,7 @@ mc ls local/biasharaos-uploads/invoices/
 
 ## Known lessons from the deployment journey
 
-Pulled from [`docs/deployment-journey.pdf`](docs/deployment-journey.pdf) so you
+Pulled from [`docs/Biashara_OS_Full_Journey_Cleaned.pdf`](docs/Biashara_OS_Full_Journey_Cleaned.pdf) so you
 don't have to re-learn them:
 
 1. **Calico IP pool overlap** (§4) — the obsolete `default-ipv4-ippool` had
